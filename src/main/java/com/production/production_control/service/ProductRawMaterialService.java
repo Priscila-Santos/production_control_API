@@ -1,9 +1,9 @@
 package com.production.production_control.service;
 
-import com.production.production_control.dto.request.ProductRawMaterialRequest;
-import com.production.production_control.dto.response.ProductRawMaterialResponse;
+import com.production.production_control.dto.request.ProductCompositionRequest;
+import com.production.production_control.dto.response.ProductCompositionResponse;
 import com.production.production_control.entity.*;
-import com.production.production_control.mapper.ProductRawMaterialMapper;
+import com.production.production_control.mapper.ProductCompositionMapper;
 import com.production.production_control.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,10 +16,10 @@ public class ProductRawMaterialService {
 
     private final ProductRepository productRepository;
     private final RawMaterialRepository rawMaterialRepository;
-    private final ProductRawMaterialRepository repository;
-    private final ProductRawMaterialMapper mapper;
+    private final ProductCompositionRepository repository;
+    private final ProductCompositionMapper mapper;
 
-    public ProductRawMaterialResponse create(ProductRawMaterialRequest request) {
+    public ProductCompositionResponse create(ProductCompositionRequest request) {
 
         Product product = productRepository.findById(request.productId())
                 .orElseThrow();
@@ -27,7 +27,7 @@ public class ProductRawMaterialService {
         RawMaterial rawMaterial = rawMaterialRepository.findById(request.rawMaterialId())
                 .orElseThrow();
 
-        ProductRawMaterialId id = new ProductRawMaterialId(
+        ProductComposition id = new ProductComposition(
                 product.getId(),
                 rawMaterial.getId()
         );
@@ -44,7 +44,7 @@ public class ProductRawMaterialService {
         return mapper.toDTO(prm);
     }
 
-    public List<ProductRawMaterialResponse> findByProduct(Long productId) {
+    public List<ProductCompositionResponse> findByProduct(Long productId) {
 
         return repository.findByProductId(productId)
                 .stream()
@@ -54,8 +54,8 @@ public class ProductRawMaterialService {
 
     public void delete(Long productId, Long rawMaterialId) {
 
-        ProductRawMaterialId id =
-                new ProductRawMaterialId(productId, rawMaterialId);
+        ProductComposition id =
+                new ProductComposition(productId, rawMaterialId);
 
         repository.deleteById(id);
     }

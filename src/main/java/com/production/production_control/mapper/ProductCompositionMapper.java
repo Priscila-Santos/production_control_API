@@ -1,15 +1,15 @@
 package com.production.production_control.mapper;
 
-import com.production.production_control.dto.response.ProductRawMaterialResponse;
+import com.production.production_control.dto.response.ProductCompositionResponse;
 import com.production.production_control.entity.ProductRawMaterial;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ProductRawMaterialMapper {
+public class ProductCompositionMapper {
 
-    public ProductRawMaterialResponse toDTO(ProductRawMaterial prm) {
+    public ProductCompositionResponse toDTO(ProductRawMaterial prm) {
 
-        return new ProductRawMaterialResponse(
+        return new ProductCompositionResponse(
                 prm.getProduct().getId(),
                 prm.getRawMaterial().getId(),
                 prm.getRawMaterial().getName(),

@@ -14,7 +14,7 @@ public class ProductionController {
 
     private final ProductionService productionService;
 
-    @GetMapping("/suggestion")
+    @GetMapping("/suggestions")
     public List<ProductionSuggestionResponse> calculateProduction() {
         return productionService.calculateProduction();
     }

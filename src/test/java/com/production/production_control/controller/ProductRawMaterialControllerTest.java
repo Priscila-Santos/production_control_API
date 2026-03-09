@@ -1,7 +1,7 @@
 package com.production.production_control.controller;
 
-import com.production.production_control.dto.request.ProductRawMaterialRequest;
-import com.production.production_control.dto.response.ProductRawMaterialResponse;
+import com.production.production_control.dto.request.ProductCompositionRequest;
+import com.production.production_control.dto.response.ProductCompositionResponse;
 import com.production.production_control.service.ProductRawMaterialService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,21 +21,21 @@ class ProductRawMaterialControllerTest {
     private ProductRawMaterialService service;
 
     @InjectMocks
-    private ProductRawMaterialController controller;
+    private ProductCompositionController controller;
 
     @Test
     void shouldCreateProductRawMaterialRelation() {
 
         // Arrange
-        ProductRawMaterialRequest request =
-                new ProductRawMaterialRequest(
+        ProductCompositionRequest request =
+                new ProductCompositionRequest(
                         1L,
                         2L,
                         new BigDecimal("0.5")
                 );
 
-        ProductRawMaterialResponse response =
-                new ProductRawMaterialResponse(
+        ProductCompositionResponse response =
+                new ProductCompositionResponse(
                         1L,
                         1L,
                         "Sugar",
@@ -45,7 +45,7 @@ class ProductRawMaterialControllerTest {
         when(service.create(request)).thenReturn(response);
 
         // Act
-        ProductRawMaterialResponse result = controller.create(request);
+        ProductCompositionResponse result = controller.create(request);
 
         // Assert
         assertNotNull(result);

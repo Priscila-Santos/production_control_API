@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 public class ProductRawMaterial {
 
     @EmbeddedId
-    private ProductRawMaterialId id;
+    private ProductComposition id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("productId")

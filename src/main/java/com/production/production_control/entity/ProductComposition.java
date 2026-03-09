@@ -11,7 +11,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class ProductRawMaterialId implements Serializable {
+public class ProductComposition implements Serializable {
 
     private Long productId;
     private Long rawMaterialId;

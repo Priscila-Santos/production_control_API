@@ -7,6 +7,6 @@ public record ProductResponse (
         Long id,
         String name,
         BigDecimal price,
-        List<ProductRawMaterialResponse> materials
+        List<ProductCompositionResponse> materials
 ) {
 }

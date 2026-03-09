@@ -1,7 +1,7 @@
 package com.production.production_control.controller;
 
-import com.production.production_control.dto.request.ProductRawMaterialRequest;
-import com.production.production_control.dto.response.ProductRawMaterialResponse;
+import com.production.production_control.dto.request.ProductCompositionRequest;
+import com.production.production_control.dto.response.ProductCompositionResponse;
 import com.production.production_control.service.ProductRawMaterialService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,28 +12,28 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/product-materials")
 @RequiredArgsConstructor
-public class ProductRawMaterialController {
+public class ProductCompositionController {
 
     private final ProductRawMaterialService service;
 
     @PostMapping
-    public ProductRawMaterialResponse create(
-            @Valid @RequestBody ProductRawMaterialRequest request) {
+    public ProductCompositionResponse create(
+            @Valid @RequestBody ProductCompositionRequest request) {
 
         return service.create(request);
     }
 
     @GetMapping("/product/{productId}")
-    public List<ProductRawMaterialResponse> listByProduct(
+    public List<ProductCompositionResponse> listByProduct(
             @PathVariable Long productId) {
 
         return service.findByProduct(productId);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{productId}/{rawMaterialId}")
     public void delete(
-            @RequestParam Long productId,
-            @RequestParam Long rawMaterialId) {
+            @PathVariable Long productId,
+            @PathVariable Long rawMaterialId) {
 
         service.delete(productId, rawMaterialId);
     }
