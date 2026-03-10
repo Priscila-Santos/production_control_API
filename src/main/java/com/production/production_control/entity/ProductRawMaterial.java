@@ -17,16 +17,16 @@ public class ProductRawMaterial {
     @EmbeddedId
     private ProductComposition id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("productId")
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("rawMaterialId")
     @JoinColumn(name = "raw_material_id")
     private RawMaterial rawMaterial;
 
-    @Column(name = "required_quantity", nullable = false, precision = 15, scale = 3)
+    @Column(name = "required_quantity")
     private BigDecimal requiredQuantity;
 }

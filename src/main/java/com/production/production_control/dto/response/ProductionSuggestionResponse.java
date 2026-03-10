@@ -6,8 +6,8 @@ public record ProductionSuggestionResponse(
 
         Long productId,
         String productName,
-        int quantity,
+        int requiredQuantity,
         BigDecimal unitPrice,
-        BigDecimal totalValue
+        BigDecimal totalProductionValue
 
 ) {}

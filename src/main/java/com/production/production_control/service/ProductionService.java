@@ -4,94 +4,69 @@ import com.production.production_control.dto.response.ProductionSuggestionRespon
 import com.production.production_control.entity.Product;
 import com.production.production_control.entity.ProductRawMaterial;
 import com.production.production_control.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ProductionService {
 
     private final ProductRepository productRepository;
 
-    public List<ProductionSuggestionResponse> calculateProduction() {
+    public ProductionService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
 
-        List<Product> products = productRepository.findAllWithMaterials();
+    public List<ProductionSuggestionResponse> getProductionSuggestions() {
 
-        // ordenar por maior valor
-        products.sort(Comparator.comparing(Product::getPrice).reversed());
-
-        Map<Long, BigDecimal> availableStock = new HashMap<>();
-
-        // mapear estoque atual
-        for (Product product : products) {
-            for (ProductRawMaterial prm : product.getRawMaterials()) {
-
-                Long id = prm.getRawMaterial().getId();
-
-                availableStock.putIfAbsent(
-                        id,
-                        prm.getRawMaterial().getStockQuantity()
-                );
-            }
-        }
+        List<Product> products = productRepository.findAllWithRawMaterials();
 
         List<ProductionSuggestionResponse> result = new ArrayList<>();
 
         for (Product product : products) {
 
-            int maxQuantity = Integer.MAX_VALUE;
+            int possibleProduction = calculatePossibleProduction(product);
 
-            for (ProductRawMaterial prm : product.getRawMaterials()) {
-
-                Long materialId = prm.getRawMaterial().getId();
-
-                BigDecimal available = availableStock.get(materialId);
-
-                BigDecimal required = prm.getRequiredQuantity();
-
-                int possible = available
-                        .divide(required, 0, BigDecimal.ROUND_DOWN)
-                        .intValue();
-
-                maxQuantity = Math.min(maxQuantity, possible);
-            }
-
-            if (maxQuantity <= 0) {
-                continue;
-            }
-
-            // atualizar estoque virtual
-            for (ProductRawMaterial prm : product.getRawMaterials()) {
-
-                Long materialId = prm.getRawMaterial().getId();
-
-                BigDecimal used =
-                        prm.getRequiredQuantity()
-                                .multiply(BigDecimal.valueOf(maxQuantity));
-
-                availableStock.put(
-                        materialId,
-                        availableStock.get(materialId).subtract(used)
-                );
-            }
-
-            BigDecimal total =
-                    product.getPrice().multiply(BigDecimal.valueOf(maxQuantity));
+            BigDecimal totalValue =
+                    product.getPrice().multiply(BigDecimal.valueOf(possibleProduction));
 
             result.add(
                     new ProductionSuggestionResponse(
                             product.getId(),
                             product.getName(),
-                            maxQuantity,
+                            possibleProduction,
                             product.getPrice(),
-                            total
+                            totalValue
                     )
             );
         }
 
         return result;
+    }
+
+    private int calculatePossibleProduction(Product product) {
+
+        if (product.getRawMaterials() == null || product.getRawMaterials().isEmpty()) {
+            return 0;
+        }
+
+        BigDecimal minProduction = null;
+
+        for (ProductRawMaterial prm : product.getRawMaterials()) {
+
+            BigDecimal stock = prm.getRawMaterial().getStockQuantity();
+            BigDecimal required = prm.getRequiredQuantity();
+
+            BigDecimal possible = stock.divide(required, 0, RoundingMode.DOWN);
+
+            if (minProduction == null || possible.compareTo(minProduction) < 0) {
+                minProduction = possible;
+            }
+        }
+
+        return minProduction != null ? minProduction.intValue() : 0;
     }
 }

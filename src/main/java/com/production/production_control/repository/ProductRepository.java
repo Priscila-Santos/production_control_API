@@ -11,10 +11,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByOrderByPriceDesc();
 
     @Query("""
-            SELECT DISTINCT p
-            FROM Product p
-            LEFT JOIN FETCH p.rawMaterials prm
-            LEFT JOIN FETCH prm.rawMaterial
+            SELECT p FROM Product p
+            JOIN FETCH p.rawMaterials prm
+            JOIN FETCH prm.rawMaterial
             """)
-    List<Product> findAllWithMaterials();
+    List<Product> findAllWithRawMaterials();
 }

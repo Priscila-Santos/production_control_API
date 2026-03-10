@@ -27,8 +27,13 @@ public class Product {
     @Column(nullable = false)
     private BigDecimal price;
 
+    @OneToMany(
+            mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
     @Builder.Default
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductRawMaterial> rawMaterials = new HashSet<>();
 
 }

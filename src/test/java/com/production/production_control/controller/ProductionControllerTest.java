@@ -38,20 +38,20 @@ class ProductionControllerTest {
 
         List<ProductionSuggestionResponse> mockResponse = List.of(suggestion);
 
-        when(productionService.calculateProduction())
+        when(productionService.getProductionSuggestions())
                 .thenReturn(mockResponse);
 
         // Act
         List<ProductionSuggestionResponse> result =
-                productionController.calculateProduction();
+                productionController.getProductionSuggestions();
 
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("Chocolate Cake", result.get(0).productName());
-        assertEquals(25, result.get(0).quantity());
+        assertEquals("Chocolate Cake", result.getFirst().productName());
+        assertEquals(25, result.getFirst().requiredQuantity());
 
         verify(productionService, times(1))
-                .calculateProduction();
+                .getProductionSuggestions();
     }
 }
