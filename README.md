@@ -1,138 +1,182 @@
 # Production Control API
 
-API REST desenvolvida em **Java + Spring Boot** para gerenciamento de produção baseado no consumo de matérias-primas.
+API REST desenvolvida em **Java + Spring Boot** para gerenciamento de produção industrial baseado no consumo de matérias-primas.
 
-O sistema permite:
+A aplicação permite:
 
-* Cadastro de produtos
-* Cadastro de matérias-primas
-* Associação entre produtos e matérias-primas
-* Controle de estoque
-* Cálculo de **sugestão de produção com base no estoque disponível**
-
-Essa aplicação simula um **cenário real de controle de produção industrial**, onde cada produto consome determinadas matérias-primas e a API calcula **quantas unidades podem ser produzidas com o estoque atual**.
+- Gerenciar produtos
+- Controlar estoque de matérias-primas
+- Definir composição de produtos
+- Calcular sugestão de produção
+- Gerar métricas para dashboard
 
 ---
 
-# Arquitetura
+## Frontend da aplicação
 
-O projeto segue uma arquitetura em camadas baseada em **boas práticas do ecossistema Spring Boot**.
+Interface web disponível em:
+
+👉 [Repositório do Frontend](https://github.com/Priscila-Santos/production_control_app_frontend.git)
+
+---
+
+## Arquitetura
+
+O projeto segue arquitetura em camadas:
 
 ```
+
 Controller
-   ↓
+↓
 Service
-   ↓
+↓
 Repository
-   ↓
+↓
 Database
-```
-
-Estrutura de pacotes:
 
 ```
+
+---
+
+## Tecnologias utilizadas
+
+```
+- Java 21
+- Spring Boot
+- Spring Web
+- Spring Data JPA
+- Hibernate
+- Flyway
+- PostgreSQL
+- Lombok
+- Jakarta Validation
+- Maven
+```
+
+---
+
+# Estrutura do projeto
+
+```
+
 src/main/java/com/production/production_control
 
 controller
-dto
-   ├── request
-   └── response
-entity
-repository
+├ ProductController
+├ RawMaterialController
+├ ProductRawMaterialController
+├ ProductionController
+└ DashboardController
+
 service
+├ ProductService
+├ RawMaterialService
+├ CompositionService
+├ ProductionService
+└ DashboardService
+
+repository
+├ ProductRepository
+├ RawMaterialRepository
+├ ProductRawMaterialRepository
+└ ProductionRepository
+
+dto
+├ request
+└ response
+
+entity
 exception
 config
+
+```
+
+---
+
+## Banco de dados
+
+O banco é gerenciado com **Flyway migrations**.
+
+Localização:
+
+```
+
+src/main/resources/db/migration
+
+````
+
+---
+
+### V1 — Products
+
+```sql
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price NUMERIC(10,2) NOT NULL
+);
+````
+
+---
+
+### V2 — Raw Materials
+
+```sql
+CREATE TABLE raw_materials (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    stock_quantity NUMERIC(15,3) NOT NULL CHECK (stock_quantity >= 0)
+);
 ```
 
 ---
 
-# Tecnologias utilizadas
+### V3 — Product Composition
 
-* Java 21
-* Spring Boot
-* Spring Web
-* Spring Data JPA
-* Hibernate
-* Lombok
-* Jakarta Validation
-* JUnit 5
-* Mockito
-* Maven
+Relacionamento N:N entre produtos e matérias-primas.
 
----
+```sql
+CREATE TABLE product_raw_material (
+    product_id BIGINT NOT NULL,
+    raw_material_id BIGINT NOT NULL,
+    required_quantity NUMERIC(15,3) NOT NULL,
 
-# Modelo de domínio
+    PRIMARY KEY (product_id, raw_material_id),
 
-## Product
-
-Representa um produto que pode ser produzido.
-
-| Campo | Tipo       |
-| ----- | ---------- |
-| id    | Long       |
-| name  | String     |
-| price | BigDecimal |
-
----
-
-## RawMaterial
-
-Representa uma matéria-prima usada na produção.
-
-| Campo         | Tipo       |
-| ------------- | ---------- |
-| id            | Long       |
-| name          | String     |
-| stockQuantity | BigDecimal |
-
----
-
-## ProductRawMaterial
-
-Relaciona **produto e matéria-prima**, indicando quanto da matéria-prima é necessário para produzir uma unidade do produto.
-
-| Campo            | Tipo       |
-| ---------------- | ---------- |
-| id               | Long       |
-| productId        | Long       |
-| rawMaterialId    | Long       |
-| quantityRequired | BigDecimal |
-
----
-
-# Funcionalidade principal
-
-## Sugestão de produção
-
-A API calcula **quantas unidades de cada produto podem ser produzidas com o estoque disponível**.
-
-### Exemplo
-
-Produto: **Bolo de Chocolate**
-
-| Matéria Prima | Necessário por unidade | Estoque |
-| ------------- | ---------------------- | ------- |
-| Farinha       | 0.5 kg                 | 10 kg   |
-| Açúcar        | 0.3 kg                 | 6 kg    |
-
-Cálculo:
-
-```
-Farinha → 10 / 0.5 = 20
-Açúcar → 6 / 0.3 = 20
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (raw_material_id) REFERENCES raw_materials(id)
+);
 ```
 
-Produção possível:
+---
 
-```
-20 unidades
-```
+### V4 — Production
 
-A API retorna o **mínimo entre os materiais necessários**.
+```sql
+CREATE TABLE production (
+    id BIGSERIAL PRIMARY KEY,
+    product_id BIGINT NOT NULL,
+    quantity INTEGER NOT NULL,
+    production_date DATE NOT NULL,
+    total_value NUMERIC(12,2) NOT NULL,
+
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+```
 
 ---
 
-# Endpoints da API
+### V5 — Seed Data
+
+Popula o banco com dados de desenvolvimento:
+
+* 50 produtos
+* 50 matérias-primas
+* 300 registros de produção
+
+---
+
+## Endpoints da API
 
 Base URL:
 
@@ -142,235 +186,92 @@ http://localhost:8080/api
 
 ---
 
-# Products
+## Products
 
-## Criar produto
+| Método | Endpoint       |
+| ------ | -------------- |
+| GET    | /products      |
+| POST   | /products      |
+| PUT    | /products/{id} |
+| DELETE | /products/{id} |
 
-POST `/products`
+---
 
-Request
+## Raw Materials
+
+| Método | Endpoint            |
+| ------ | ------------------- |
+| GET    | /raw-materials      |
+| POST   | /raw-materials      |
+| PUT    | /raw-materials/{id} |
+| DELETE | /raw-materials/{id} |
+
+---
+
+## Product Composition
+
+| Método | Endpoint                               |
+| ------ | -------------------------------------- |
+| GET    | /product-materials/product/{productId} |
+| POST   | /product-materials                     |
+| DELETE | /product-materials                     |
+
+---
+
+## Production Suggestions
+
+Calcula a produção possível com base no estoque.
+
+```
+GET /production/suggestions
+```
+
+---
+
+## Dashboard
+
+Retorna métricas agregadas da produção.
+
+```
+GET /dashboard
+```
+
+Response exemplo:
 
 ```json
 {
-  "name": "Chocolate Cake",
-  "price": 10.00
-}
-```
-
-Response
-
-```json
-{
-  "id": 1,
-  "name": "Chocolate Cake",
-  "price": 10.00
+  "totalProducts": 50,
+  "totalRawMaterials": 50,
+  "totalStockQuantity": 21340,
+  "estimatedProductionValue": 734000,
+  "productionValueTrend": [],
+  "stockDistribution": []
 }
 ```
 
 ---
 
-## Listar produtos
+## Como executar
 
-GET `/products`
+### 1 Clonar repositório
 
-Response
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Chocolate Cake",
-    "price": 10.00
-  }
-]
+```
+git clone https://github.com/Priscila-Santos/production_control_API.git
 ```
 
 ---
 
-# Raw Materials
+### 2 Configurar banco PostgreSQL
 
-## Criar matéria-prima
+Criar banco:
 
-POST `/raw-materials`
-
-Request
-
-```json
-{
-  "name": "Sugar",
-  "stockQuantity": 50
-}
+```
+production_control
 ```
 
 ---
 
-## Listar matérias-primas
-
-GET `/raw-materials`
-
----
-
-# Product Raw Materials
-
-Relaciona produtos com matérias-primas.
-
----
-
-## Criar relação produto ↔ matéria-prima
-
-POST `/product-materials`
-
-Request
-
-```json
-{
-  "productId": 1,
-  "rawMaterialId": 2,
-  "quantityRequired": 0.5
-}
-```
-
----
-
-## Listar matérias-primas de um produto
-
-GET
-
-```
-/product-materials/product/{productId}
-```
-
-Exemplo
-
-```
-/product-materials/product/1
-```
-
-Response
-
-```json
-[
-  {
-    "id": 1,
-    "productId": 1,
-    "rawMaterialName": "Sugar",
-    "quantityRequired": 0.5
-  }
-]
-```
-
----
-
-## Remover relação produto ↔ matéria-prima
-
-DELETE
-
-```
-/product-materials?productId=1&rawMaterialId=2
-```
-
----
-
-# Production Suggestion
-
-Calcula sugestão de produção baseada no estoque.
-
-GET
-
-```
-/production/suggestion
-```
-
-Response
-
-```json
-[
-  {
-    "productId": 1,
-    "productName": "Chocolate Cake",
-    "quantity": 20,
-    "unitPrice": 10.00,
-    "totalValue": 200.00
-  }
-]
-```
-
----
-
-# DTOs
-
-O projeto utiliza **Java Records para DTOs**, reduzindo boilerplate e garantindo imutabilidade.
-
-Exemplo:
-
-```java
-public record ProductionSuggestionResponse(
-        Long productId,
-        String productName,
-        int quantity,
-        BigDecimal unitPrice,
-        BigDecimal totalValue
-) {}
-```
-
-Benefícios:
-
-* Imutabilidade
-* Menos código
-* Melhor serialização com Jackson
-
----
-
-# Testes
-
-A aplicação possui **testes unitários utilizando JUnit 5 e Mockito**.
-
-Exemplo de padrão utilizado:
-
-```
-Arrange
-Act
-Assert
-```
-
-Exemplo simplificado:
-
-```java
-@Test
-void shouldReturnProductionSuggestions() {
-
-    // Arrange
-    when(service.calculateProduction()).thenReturn(mockResponse);
-
-    // Act
-    List<ProductionSuggestionResponse> result = controller.calculateProduction();
-
-    // Assert
-    assertEquals(1, result.size());
-}
-```
-
----
-
-# Como executar o projeto
-
-## 1 Clonar repositório
-
-```
-git clone https://github.com/seu-usuario/production-control
-```
-
----
-
-## 2 Entrar na pasta
-
-```
-cd production-control
-```
-
----
-
-## 3 Rodar aplicação
+### 3 Rodar aplicação
 
 ```
 ./mvnw spring-boot:run
@@ -384,56 +285,37 @@ mvn spring-boot:run
 
 ---
 
-## 4 Acessar API
-
-```
-http://localhost:8080/api
-```
-
----
-
-# Testando a API
+## Testando API
 
 Ferramentas recomendadas:
 
-* Insomnia
 * Postman
+* Insomnia
 * Curl
 
-Fluxo recomendado de testes:
+Fluxo recomendado:
 
 1 Criar matéria-prima
 2 Criar produto
-3 Criar relação produto ↔ matéria-prima
+3 Definir composição
 4 Atualizar estoque
 5 Consultar sugestão de produção
+6 Visualizar dashboard
 
 ---
 
-# Melhorias futuras
+## Melhorias futuras
 
-* Autenticação com **Spring Security + JWT**
-* Documentação com **Swagger / OpenAPI**
-* Cache com **Redis**
-* Containerização com **Docker**
-* Testes de integração com **Testcontainers**
+* Autenticação com Spring Security
+* Documentação com Swagger
+* Cache com Redis
+* Docker
+* Testcontainers
 * Paginação e filtros
 
 ---
 
-# Objetivo do projeto
+## Autora
 
-Este projeto foi desenvolvido com o objetivo de:
-
-* Demonstrar domínio de **Spring Boot**
-* Aplicar **arquitetura em camadas**
-* Utilizar **DTOs e boas práticas REST**
-* Implementar **testes unitários**
-* Simular um **problema real de negócio**
-
----
-
-# Autora
-
-Desenvolvido por **Priscila Santos**
+Projeto desenvolvido por **Priscila Santos**
 
